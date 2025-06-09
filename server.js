@@ -3,6 +3,7 @@ const multer = require("multer");
 const axios = require("axios");
 const cors = require("cors");
 const path = require("path");
+const FormData = require("form-data"); // ✅ Add FormData
 require("dotenv").config();
 
 const app = express();
@@ -26,20 +27,33 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 
   try {
+    console.log("Uploaded file info:", file);
+
+    // ✅ Use FormData to structure the request correctly
+    const formData = new FormData();
+    formData.append("file", file.buffer, file.originalname);
+
     const response = await axios.post(
       process.env.QUALTRICS_UPLOAD_URL,
-      file.buffer,
+      formData,
       {
         headers: {
-          "Content-Type": "text/csv",
+          ...formData.getHeaders(),
           "X-API-TOKEN": process.env.QUALTRICS_API_TOKEN,
         },
-      }
+      },
     );
+
     res.json({ message: "Upload succeeded", result: response.data });
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Upload failed", detail: err.response?.data || err.message });
+    console.error(
+      err.response && err.response.data ? err.response.data : err.message,
+    );
+    res.status(500).json({
+      error: "Upload failed",
+      detail:
+        err.response && err.response.data ? err.response.data : err.message,
+    });
   }
 });
 

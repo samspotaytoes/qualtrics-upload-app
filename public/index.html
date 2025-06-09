@@ -1,33 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Secure CSV Upload</title>
+  <meta charset="UTF-8" />
+  <title>Upload to Qualtrics</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    input[type="file"], input[type="password"] {
+      margin-bottom: 12px;
+      width: 100%;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 1em;
+    }
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <h1>Upload Family Contact CSV</h1>
+  <h1>File Upload</h1>
   <form id="uploadForm">
-    <input type="password" name="password" placeholder="Upload password" required><br><br>
-    <input type="file" name="file" accept=".csv" required><br><br>
+    <label for="password">Password:</label><br />
+    <input type="password" name="password" required /><br />
+
+    <label for="file">CSV File:</label><br />
+    <input type="file" name="file" accept=".csv" required /><br />
+
     <button type="submit">Upload</button>
   </form>
-  <p id="result"></p>
+
+  <div id="message"></div>
 
   <script>
     const form = document.getElementById("uploadForm");
-    const result = document.getElementById("result");
+    const messageDiv = document.getElementById("message");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const formData = new FormData(form);
-      const response = await fetch("/upload", {
-        method: "POST",
-        body: formData
-      });
 
-      const data = await response.json();
-      result.textContent = response.ok ? "✅ Upload successful!" : `❌ ${data.error}`;
+      try {
+        const res = await fetch("/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          messageDiv.textContent = "✅ Upload successful!";
+        } else {
+          messageDiv.textContent = `❌ Error: ${result.error || "Upload failed"}`;
+        }
+      } catch (err) {
+        messageDiv.textContent = `❌ Network error: ${err.message}`;
+      }
     });
   </script>
 </body>
